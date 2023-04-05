@@ -3,16 +3,10 @@ import { RedisModule } from '@liaoliaots/nestjs-redis';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { RedisClientModule } from './redis-client/redis-client.module';
 
 @Module({
-  imports: [
-    RedisModule.forRoot({
-      config: {
-        host: 'localhost',
-        port: 6379
-      }
-    })
-  ],
+  imports: [RedisClientModule],
   controllers: [AppController],
   providers: [AppService],
 })

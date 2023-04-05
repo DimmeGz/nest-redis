@@ -7,7 +7,6 @@ import {
   Post,
 } from '@nestjs/common';
 import { AppService } from './app.service';
-import { createClient } from 'redis';
 
 @Controller()
 export class AppController {
