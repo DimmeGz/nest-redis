@@ -1,31 +1,53 @@
 import { Injectable } from '@nestjs/common';
-import { RedisService } from '@liaoliaots/nestjs-redis';
-import Redis from 'ioredis';
-
+import { createClient } from 'redis';
 
 @Injectable()
 export class AppService {
-  private readonly redis: Redis;
-
-  constructor(private readonly redisService: RedisService) {
-    this.redis = this.redisService.getClient();
-  }
+  constructor() {}
 
   async set(req) {
+    const client = createClient();
+    await client.connect();
+
     for (let item of req) {
-        const {key, value, ttl} = item
-        await this.redis.set(key, value, 'EX', ttl);
+      const { key, value, ttl } = item;
+
+      if (typeof value === 'object' && value !== null) {
+        await client.json.set(key, '.', value);
+      } else {
+        await client.set(key, value, { EX: ttl });
+      }
     }
-    return 'ok'
+    await client.quit();
+    return 'ok';
   }
 
   async get(key) {
-    const result = await this.redis.get(key)
-    return result
+    const client = createClient();
+    await client.connect();
+    let result;
+    try {
+      result = await client.get(key);
+    } catch (e) {
+      result = await client.json.get(key);
+    }
+    await client.quit();
+    return result;
   }
 
   async delete(key) {
-    await this.redis.del(key)
-    return `${key} was deleted`
+    const client = createClient();
+    await client.connect();
+    await client.del(key);
+    await client.quit();
+    return `${key} was deleted`;
+  }
+
+  async reset() {
+    const client = createClient();
+    await client.connect();
+    await client.flushAll();
+    await client.quit();
+    return `Everything deleted`;
   }
 }

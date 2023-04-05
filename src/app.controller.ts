@@ -1,5 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { AppService } from './app.service';
+import { createClient } from 'redis';
 
 @Controller()
 export class AppController {
@@ -10,13 +18,18 @@ export class AppController {
     return this.appService.set(requestBody);
   }
 
-  @Get(":key")
-  getOne(@Param("key") key: string): Promise<any> {
+  @Get(':key')
+  getOne(@Param('key') key: string): Promise<any> {
     return this.appService.get(key);
   }
 
-  @Delete("/delete/:key")
-  removeOne(@Param("key") key: string): Promise<any> {
+  @Delete('/delete/:key')
+  removeOne(@Param('key') key: string): Promise<any> {
     return this.appService.delete(key);
+  }
+
+  @Delete('/delete_all')
+  removeAll(): Promise<any> {
+    return this.appService.reset();
   }
 }
