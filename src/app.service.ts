@@ -3,51 +3,47 @@ import { createClient } from 'redis';
 
 @Injectable()
 export class AppService {
-  constructor() {}
+  private client;
+
+  async onModuleInit() {
+    this.client = createClient();
+    await this.client.connect();
+  }
 
   async set(req) {
-    const client = createClient();
-    await client.connect();
-
     for (let item of req) {
       const { key, value, ttl } = item;
 
       if (typeof value === 'object' && value !== null) {
-        await client.json.set(key, '.', value);
+        await this.client.json.set(key, '.', value);
       } else {
-        await client.set(key, value, { EX: ttl });
+        await this.client.set(key, value, { EX: ttl });
       }
     }
-    await client.quit();
     return 'ok';
   }
 
   async get(key) {
-    const client = createClient();
-    await client.connect();
     let result;
     try {
-      result = await client.get(key);
+      result = await this.client.get(key);
     } catch (e) {
-      result = await client.json.get(key);
+      result = await this.client.json.get(key);
     }
-    await client.quit();
     return result;
   }
 
   async delete(key) {
-    const client = createClient();
-    await client.connect();
-    await client.del(key);
-    await client.quit();
+    await this.client.del(key);
     return `${key} was deleted`;
   }
 
   async reset() {
-    const client = createClient();
-    await client.connect();
-    await client.flushAll();
-    await client.quit();
+    await this.client.flushAll();
     return `Everything deleted`;
+  }
+
+  async onModuleDestroy() {
+    await this.client.quit();
   }
 }
